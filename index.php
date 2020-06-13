@@ -48,7 +48,6 @@ if (!empty($_POST['leads']['status'])) {
 
     #Подключаемся к Google Sheets Api по функции serviceClient()
     $service = serviceClient();
-    log_data(1);
     $spreadsheetId = '1wIaw9B41IwVbkjkeEejxtSKVK-X0AXusWnJsgUFK6UQ';
     $range = "Sheet1";
     $values = [
@@ -57,7 +56,6 @@ if (!empty($_POST['leads']['status'])) {
     $body = new Google_Service_Sheets_ValueRange([
         'values' => $values
     ]);
-    log_data(2);
     $params = [
         'valueInputOption' => 'RAW'
     ];
@@ -71,7 +69,6 @@ if (!empty($_POST['leads']['status'])) {
         $params,
         $insert
     );
-    log_data(3);
 }
 
 #Фукцыя подключения к Google Sheets Api
