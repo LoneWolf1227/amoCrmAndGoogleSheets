@@ -10,3 +10,6 @@ Integrate
 3. Настройте Webhooks в amoCRM для Сделок
 
 4. В файле config.php вставте свои данные для amoCRM
+
+5. Для того чтобы отправлять данные обратно из Google Sheets в amoCrm в Google Sheets установите дополнение Trigger 
+& Send и настройте его.
