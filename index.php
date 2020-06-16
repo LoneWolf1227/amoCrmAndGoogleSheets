@@ -7,6 +7,12 @@ require_once __DIR__ . '/vendor/autoload.php';
 //Подключаемя к amoCRM
 $amo = new HamtimAmocrm(AMO_LOGIN, AMO_API, AMO_DOMAIN);
 
+$pdo = new PDO(
+    'mysql:host=' . DB_HOST . ';dbname=' . DB_DATABASE,
+    DB_LOGIN,
+    DB_PASS
+);
+
 //Данный блок if отправляеть данные из amoCrm в Google Sheets
 if (!empty($_POST['leads']['status'])) {
 
@@ -15,61 +21,71 @@ if (!empty($_POST['leads']['status'])) {
     $lead = $amo->q($leadById, 'GET');
     //log_data($lead);
 
-    //Берём данные контактов по ИД которая привязана к Сделку
-    $contactsPath = '/api/v4/contacts/'.$lead->_embedded->contacts[0]->id;
-    $contacts = $amo->q($contactsPath,'GET');
-    //log_data($contacts);
-
-    //Берём данные компании по ИД которая привязана к Сделку
-    $companyPath = '/api/v4/companies/'.$lead->_embedded->companies[0]->id;
-    $company = $amo->q($companyPath,'GET');
-    //log_data($company);
-
-    //Берём все нужные данные на соответствуюшие переменные
-    $leadId = $lead->id;
-    $leadName = $lead->name;
-    $leadPrice = $lead->price;
-    $leadData = date("d/m/y", $lead->created_at);
-    $companyName = $company->name;
-
-    /*Проверка если адрес задан в контакты тогда присваиваем его в
-     * $address
-     * Если адрес не задан в контакты тогда вазмём адрес Компании
-     * Если и адрес компании не указана тогда оставим переменную
-     * $address пустым
+    /* Добавляем в БД id лида который был отправлен в Google Sheets
+     * id лида в база отмечен ка unique index
+     * при новом добавлении проверяется если id существует
+     * тогда функция отправит false это означает что в Google Sheets
+     * ест такой лид и лид не будить дублироваться.
     */
-    if ($contacts->custom_fields_values['0']->values['0']->value){
-        $address = $contacts->custom_fields_values['0']->values['0']->value;
-    }
-    elseif($company->custom_fields_values['1']->values['0']->value){
-        $address = $company->custom_fields_values['1']->values['0']->value;
-    }else{
-        $address = '';
-    }
+    $sql = "INSERT INTO `leads`(`lead_id`) VALUES ($lead->id)";
+    $stmt = $pdo->query($sql);
 
-    //Подключаемся к Google Sheets Api по функции serviceClient()
-    $service = serviceClient();
-    $spreadsheetId = '1wIaw9B41IwVbkjkeEejxtSKVK-X0AXusWnJsgUFK6UQ';
-    $range = "Sheet1";
-    $values = [
-        [$leadId,$leadData,$leadName,$companyName,$address,$leadPrice]
-    ];
-    $body = new Google_Service_Sheets_ValueRange([
-        'values' => $values
-    ]);
-    $params = [
-        'valueInputOption' => 'RAW'
-    ];
-    $insert = [
-        'insertDataOptions' => 'INSERT_ROWS'
-    ];
-    $result = $service->spreadsheets_values->append(
-        $spreadsheetId,
-        $range,
-        $body,
-        $params,
-        $insert
-    );
+    if ($stmt) {
+        //Берём данные контактов по ИД которая привязана к Сделку
+        $contactsPath = '/api/v4/contacts/' . $lead->_embedded->contacts[0]->id;
+        $contacts = $amo->q($contactsPath, 'GET');
+        //log_data($contacts);
+
+        //Берём данные компании по ИД которая привязана к Сделку
+        $companyPath = '/api/v4/companies/' . $lead->_embedded->companies[0]->id;
+        $company = $amo->q($companyPath, 'GET');
+        //log_data($company);
+
+        //Берём все нужные данные на соответствуюшие переменные
+        $leadId = $lead->id;
+        $leadName = $lead->name;
+        $leadPrice = $lead->price;
+        $leadData = date("d/m/y", $lead->created_at);
+        $companyName = $company->name;
+
+        /*Проверка если адрес задан в контакты тогда присваиваем его в
+         * $address
+         * Если адрес не задан в контакты тогда вазмём адрес Компании
+         * Если и адрес компании не указана тогда оставим переменную
+         * $address пустым
+        */
+        if ($contacts->custom_fields_values['0']->values['0']->value) {
+            $address = $contacts->custom_fields_values['0']->values['0']->value;
+        } elseif ($company->custom_fields_values['1']->values['0']->value) {
+            $address = $company->custom_fields_values['1']->values['0']->value;
+        } else {
+            $address = '';
+        }
+
+        //Подключаемся к Google Sheets Api по функции serviceClient()
+        $service = serviceClient();
+        $spreadsheetId = '1wIaw9B41IwVbkjkeEejxtSKVK-X0AXusWnJsgUFK6UQ';
+        $range = "Sheet1";
+        $values = [
+            [$leadId, $leadData, $leadName, $companyName, $address, $leadPrice]
+        ];
+        $body = new Google_Service_Sheets_ValueRange([
+            'values' => $values
+        ]);
+        $params = [
+            'valueInputOption' => 'RAW'
+        ];
+        $insert = [
+            'insertDataOptions' => 'INSERT_ROWS'
+        ];
+        $result = $service->spreadsheets_values->append(
+            $spreadsheetId,
+            $range,
+            $body,
+            $params,
+            $insert
+        );
+    }
 }
 
 
