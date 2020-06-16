@@ -65,14 +65,12 @@ if (!class_exists('HamtimAmocrm')) {
 			return $out;
 		}
 		
-		function q($path, $fields=array(), $ifModifiedSince=false)
+		function q($path, $type, $fields=array(), $ifModifiedSince=false)
 		{
-			return $this->amocrm_query($path, $fields, $ifModifiedSince);
+			return $this->amocrm_query($path, $type, $fields, $ifModifiedSince);
 		}
 		
-		function l($l){ echo '<pre>'; var_dump($l); echo '</pre>'; }
-		
-		function amocrm_query($path, $fields=array(), $ifModifiedSince=false)
+		function amocrm_query($path, $type, $fields=array(), $ifModifiedSince=false)
 		{
 			$link='https://'.$this->subdomain.'.amocrm.ru'.$path;
 
@@ -88,10 +86,10 @@ if (!class_exists('HamtimAmocrm')) {
 				$httpHeader = array();
 			}
 			if( count($fields) ){
-				curl_setopt($curl,CURLOPT_CUSTOMREQUEST,'GET');
 				curl_setopt($curl,CURLOPT_POSTFIELDS,json_encode($fields));
 				$httpHeader[] = 'Content-Type: application/json';
 			}
+            curl_setopt($curl,CURLOPT_CUSTOMREQUEST, $type);
 			curl_setopt($curl,CURLOPT_HTTPHEADER, $httpHeader);
 			curl_setopt($curl,CURLOPT_HEADER,false);
 			curl_setopt($curl,CURLOPT_COOKIEFILE, __DIR__ .'/cookie.txt'); #PHP>5.3.6 dirname(__FILE__) -> __DIR__
