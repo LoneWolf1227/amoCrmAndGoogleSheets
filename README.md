@@ -1,5 +1,7 @@
 # amoCrmAndGoogleSheets
-Integrate
+Интеграция
+
+#### **amoCRMClientForApiV4 ещё в стадии разработки.**
 
 1. Вам нужно создать сервисный акаунт в https://console.cloud.google.com/
 скачать json фай поместит на корневом директории и переминовать его в credentials.json.
