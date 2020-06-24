@@ -6,6 +6,24 @@ namespace Classes;
 
 class Get extends Core
 {
+    public function getItems($item, $customFields = '')
+    {
+        if (!empty($customFields))
+        {
+            $path =  '/api/v4/'.$item.'/'.$customFields;
+        }
+        else
+        {
+            $path =  '/api/v4/'.$item;
+        }
+        return $this->amo->q($path, 'GET');
+    }
+
+    public function getContacts($customFields = '')
+    {
+        return $this->getItems('contacts', $customFields);
+    }
+
     public function getItemById($id, $item, $with = '')
     {
         if (!empty($with))
@@ -29,4 +47,6 @@ class Get extends Core
     public function companyById($id, $with = ''){
         return $this->getItemById($id, 'companies', $with);
     }
+
+
 }

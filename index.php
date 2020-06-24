@@ -1,28 +1,37 @@
 <?php
+header("Status: Created", true, "201");
+log_data(headers_sent());
 
-require_once __DIR__ . '/amoCrmClientForApiV4/autoload.php';
-require_once __DIR__ . '/vendor/autoload.php';
-require_once __DIR__ . '/functions/fromAmoToSheets.php';
-require_once __DIR__ . '/functions/fromSheetsToAmo.php';
+require __DIR__ . '/amoCrmClientForApiV4/autoload.php';
+require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/app/Core.php';
 
-$raw = file_get_contents('php://input');
-$data = json_decode($raw, true);
-//log_data($data);
 
-$toSheets = fromAmoToSheets();
-$toAmo = fromSheetsToAmo($data);
-
-//Функция подключения к Google Sheets Api
-function serviceClient(){
-    $client = new \Google_Client();
-    $client->setApplicationName('Amocrm and Sheets');
-    $client->setScopes([\Google_Service_Sheets::SPREADSHEETS]);
-    $client->setAccessType('offline');
-    $client->setAuthConfig(__DIR__ . '/credentials.json');
-    return new Google_Service_Sheets($client);
+//Данный блок if отправляеть данные из amoCrm в Google Sheets
+if (!empty($_POST['leads']['status'])) {
+    require __DIR__ . '/app/fromAmoToSheets.php';
+    $post = $_POST;
+    $fromAmoToSheets = new fromAmoToSheets;
+    $fromAmoToSheets->toSheets($post);
 }
 
-function log_data($data) {
-    $file = __DIR__.'/log.txt';
+$raw = file_get_contents('php://input');
+if (!empty($raw)){
+    require __DIR__ . '/app/fromSheetsToAmo.php';
+    $data =  json_decode($raw, true);
+    $fromSheetsToAmo = new fromSheetsToAmo;
+    $STA = $fromSheetsToAmo->toAmo($data);
+}
+
+if (!empty($_POST['leads']['update']['0'])) {
+    require __DIR__ . '/app/updateGoogleSheets.php';
+    $post = $_POST;
+    $updateGoogleSheets = new updateGoogleSheets;
+    $updateGoogleSheets->updateGS($post);
+}
+
+function log_data($data)
+{
+    $file = __DIR__ . '/log.txt';
     file_put_contents($file, var_export($data, true), FILE_APPEND);
 }
