@@ -1,6 +1,5 @@
 <?php
 header("Status: Created", true, "201");
-log_data(headers_sent());
 
 require __DIR__ . '/amoCrmClientForApiV4/autoload.php';
 require __DIR__ . '/vendor/autoload.php';
@@ -28,10 +27,4 @@ if (!empty($_POST['leads']['update']['0'])) {
     $post = $_POST;
     $updateGoogleSheets = new updateGoogleSheets;
     $updateGoogleSheets->updateGS($post);
-}
-
-function log_data($data)
-{
-    $file = __DIR__ . '/log.txt';
-    file_put_contents($file, var_export($data, true), FILE_APPEND);
 }
